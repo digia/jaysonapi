@@ -1,0 +1,31 @@
+{
+  "name": "jsoongiajs",
+  "version": "1.0.0",
+  "description": "Framework agnostic JSON API serializer.",
+  "main": "lib/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "lab -C -v -g test/unit/test_*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/digia/jsoongiajs"
+  },
+  "keywords": [
+    "json",
+    "json api",
+    "json serializer"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^2.9.34",
+    "lodash": "^3.10.0"
+  },
+  "devDependencies": {
+    "code": "^1.4.1",
+    "lab": "^5.13.0"
+  }
+}
