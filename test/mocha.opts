@@ -1,0 +1,7 @@
+--colors
+--async-only
+--compilers js:babel-core/register
+--inline-diffs
+--recursive
+--require ./test/helpers.js
+--reporter spec
