@@ -36,6 +36,13 @@ export default function Serializer(
   const { ref, registry } = config;
   const { attributes, relationships } = serializerSchema;
 
+  /**
+   * Parse Serializer
+   *
+   * @param serializer {function,object,string}
+   *
+   * @return object
+   */
   function parseSerializer(serializer) {
     // Support embeded serializers
     if (IsFunction(serializer)) {
@@ -59,6 +66,14 @@ export default function Serializer(
     return Serializer(serializer.type, serializer, serializer.config || {});
   }
 
+  /**
+   * Process Data Relationships
+   *
+   * @param data {object}
+   * @param included {object} { address: [] | {}, phone: [] | {} }
+   *
+   * @return object|array
+   */
   function processDataRelationships(data, included) {
     if (IsEmpty(relationships) || IsEmpty(data) || IsEmpty(included)) {
       return void 0;
@@ -88,6 +103,14 @@ export default function Serializer(
     }, {});
   }
 
+  /**
+   * Process Data
+   *
+   * @param data {object}
+   * @param included {object} { address: [] | {}, phone: [] | {} }
+   *
+   * @return object|array
+   */
   function processData(data, included) {
     if (IsEmpty(data)) {
       if (IsUndefined(data)) {
@@ -126,7 +149,7 @@ export default function Serializer(
   }
 
   /**
-   * Serialize Included
+   * Process Included
    *
    * TODO: Spec calls for including included data, even if its not directly related
    * to the data - they can be related to each other. Currently i don't see a simple
@@ -136,7 +159,6 @@ export default function Serializer(
    * @param included {object} { address: [] | {}, phone: [] | {} }
    *
    * @return array
-   *
    */
   function processIncluded(included) {
     if (IsEmpty(relationships) || IsEmpty(included)) {
@@ -161,6 +183,9 @@ export default function Serializer(
     .flatten()
     .uniqWith((c, cTo) => {
       // TODO(digia): Is this harming performance enough to refactor?
+      // We do this to dynamically detect the reference property.
+      // Top level of an include - at this time - should only be
+      // id, "ref", and attributes. Ref can be configured.
       const kL = Object.keys(Omit(c, 'attributes'));
 
       return Get(c, kL[0]) === Get(cTo, kL[0]) && Get(c, kL[1]) === Get(cTo, kL[1]);
