@@ -1,6 +1,6 @@
-import Serializer from '../../src';
+import Serializer, { Registry } from '../../src';
 import { BelongsTo, HasMany } from '../../src/relationships';
-import { DataReferenceError } from '../../src/errors';
+import { DataReferenceError, SerializerNotRegisteredError } from '../../src/errors';
 
 
 describe('Serializer', function () {
@@ -222,6 +222,120 @@ describe('Serializer', function () {
         done();
       });
 
+      it(`serializes the included and data relationships using a string as the serializer reference`, function (done) {
+        var addressSchema = {
+          type: 'address',
+          attributes: ['street', 'city'],
+        };
+        const addressSerializer = Serializer('address', addressSchema);
+        var personSchema = {
+          attributes: ['name', 'phone'],
+          relationships: {
+            address: {
+              serializer: 'Address',
+              relationshipType: HasMany('personId')
+            }
+          }
+        };
+        const personSerializer = Serializer('person', personSchema);
+
+        // Register the serializers
+
+        Registry.register('Address', addressSerializer);
+        Registry.register('Person', personSerializer);
+
+        // Test
+
+        var payload = { id: 1, name: 'Joe', phone: '9008881234' };
+        var includedPayload = {
+          address: {
+            id: 2,
+            street: '123 Street Ave.',
+            city: 'Lansing',
+            personId: 1,
+          }
+        };
+
+        const jsonapi = personSerializer.serialize({ data: payload, included: includedPayload });
+
+        const { data, included } = jsonapi;
+
+        expect(included).to.be.an.array();
+        expect(included).to.be.length(1);
+
+        const address = included[0];
+
+        expect(address.type).to.equal('address');
+        expect(address.id).to.equal(2);
+        expect(address.attributes.street).to.equal('123 Street Ave.');
+        expect(address.attributes.city).to.equal('Lansing');
+
+        const { relationships } = data;
+
+        expect(relationships).to.be.an.object();
+
+        expect(relationships.address.data.type).to.equal('address');
+        expect(relationships.address.data.id).to.equal(2);
+
+
+        Registry.empty(); // Clean up for the error test later on
+
+        done();
+      });
+
+      it(`serializes the included and data relationships using a nested serializer reference`, function (done) {
+        var addressSchema = {
+          type: 'address',
+          attributes: ['street', 'city'],
+        };
+        const addressSerializer = Serializer('address', addressSchema);
+        var personSchema = {
+          attributes: ['name', 'phone'],
+          relationships: {
+            address: {
+              serializer: addressSerializer,
+              relationshipType: HasMany('personId')
+            }
+          }
+        };
+        const personSerializer = Serializer('person', personSchema);
+
+        // Test
+
+        var payload = { id: 1, name: 'Joe', phone: '9008881234' };
+        var includedPayload = {
+          address: {
+            id: 2,
+            street: '123 Street Ave.',
+            city: 'Lansing',
+            personId: 1,
+          }
+        };
+
+        const jsonapi = personSerializer.serialize({ data: payload, included: includedPayload });
+
+        const { data, included } = jsonapi;
+
+        expect(included).to.be.an.array();
+        expect(included).to.be.length(1);
+
+        const address = included[0];
+
+        expect(address.type).to.equal('address');
+        expect(address.id).to.equal(2);
+        expect(address.attributes.street).to.equal('123 Street Ave.');
+        expect(address.attributes.city).to.equal('Lansing');
+
+        const { relationships } = data;
+
+        expect(relationships).to.be.an.object();
+
+        expect(relationships.address.data.type).to.equal('address');
+        expect(relationships.address.data.id).to.equal(2);
+
+        done();
+      });
+
       it(`serializes the included and data relationships with multiple unique included`, function (done) {
         var personSchema = {
           attributes: ['name', 'phone'],
@@ -293,6 +407,37 @@ describe('Serializer', function () {
         expect(relationships.phone.data.type).to.be.equal('phone');
         // TODO(digia): Testing undefined attributes need to be it's own test.
         expect(relationships.phone.data.attributes).to.be.undefined();
+
+        done();
+      });
+
+      it(`throws SerializerNotRegisteredError when attempting to nest an unregistered serializer`, function (done) {
+        var personSchema = {
+          attributes: ['name', 'phone'],
+          relationships: {
+            address: {
+              serializer: 'address',
+              relationshipType: HasMany('personId')
+            },
+          }
+        };
+        const serializer = Serializer('person', personSchema);
+        var payload = { id: 1, name: 'Joe' };
+        var includedPayload = {
+          address: {
+            id: 2,
+            street: '123 Street Ave.',
+            city: 'Lansing',
+            personId: 1,
+          },
+        };
+
+        function throws() {
+          serializer.serialize({ data: payload, included: includedPayload });
+        }
+
+        expect(throws).to.throw(SerializerNotRegisteredError);
+
 
         done();
       });

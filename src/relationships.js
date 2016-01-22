@@ -37,7 +37,6 @@ function handleArrayParse(schema, reference, potentialRelation, parseFn) {
   .value();
 }
 
-
 export function BelongsTo(refOnReferencee) {
   function parseBelongsTo(relationSchema, referencee, potentialRelation) {
     if (IsArray(potentialRelation)) {
