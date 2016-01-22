@@ -35,5 +35,11 @@ export default function SerializerRegister() {
     return this;
   }
 
-  return { register, get, has, remove, all };
+  function empty() {
+    registry = {};
+
+    return this;
+  }
+
+  return { register, all, get, has, remove, empty };
 }

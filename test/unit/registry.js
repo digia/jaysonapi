@@ -82,4 +82,18 @@ describe('Serializer', function () {
 
     done();
   });
+
+  it(`can be emptied`, function (done) {
+    const registry = Registry();
+
+    registry.register('Test', {});
+
+    expect(registry.has('Test')).to.be.true();
+
+    registry.empty();
+
+    expect(registry.has('Test')).to.be.false();
+
+    done();
+  });
 });
