@@ -77,13 +77,13 @@ export default function Serializer(
    */
   function processDataRelationships(data, included) {
     if (IsEmpty(relationships) || IsEmpty(data) || IsEmpty(included)) {
-      return void 0;
+      return undefined;
     }
 
     const toInclude = Pick(included, Object.keys(relationships));
 
     if (IsEmpty(toInclude)) {
-      return void 0;
+      return undefined;
     }
 
     return Reduce(toInclude, (accum, relationData, relationName) => {
@@ -108,7 +108,7 @@ export default function Serializer(
     const toProcess = Pick(links, ['self', 'related']);
 
     if (IsEmpty(toProcess)) {
-      return void 0;
+      return undefined;
     }
 
     return Reduce(toProcess, (accum, fn, key) => {
@@ -155,14 +155,12 @@ export default function Serializer(
     const resourceObject = {
       type,
       [ref]: refValue,
-      attributes: IsEmpty(serializedAttributes) ? void 0 : serializedAttributes,
+      attributes: IsEmpty(serializedAttributes) ? undefined : serializedAttributes,
       relationships: serializedRelationships,
       links: serializedLinks,
     };
 
-    return Chain(resourceObject)
-    .omitBy(IsUndefined)
-    .value();
+    return OmitBy(resourceObject, IsUndefined);
   }
 
   /**
@@ -179,14 +177,14 @@ export default function Serializer(
    */
   function processIncluded(included) {
     if (IsEmpty(relationships) || IsEmpty(included)) {
-      return void 0;
+      return undefined;
     }
 
     const relationshipNameList = Object.keys(relationships);
     const toInclude = Pick(included, relationshipNameList);
 
     if (IsEmpty(toInclude)) {
-      return void 0;
+      return undefined;
     }
 
     return Chain(Object.keys(toInclude))
@@ -217,7 +215,7 @@ export default function Serializer(
     const topLevelLinks = Pick(links, ['self', 'related', 'pagination']);
 
     if (IsEmpty(topLevelLinks)) {
-      return void 0;
+      return undefined;
     }
 
     return topLevelLinks;
