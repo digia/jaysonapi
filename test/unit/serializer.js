@@ -1,6 +1,10 @@
 import Serializer, { Registry } from '../../src';
 import { BelongsTo, HasMany } from '../../src/relationships';
-import { DataReferenceError, SerializerNotRegisteredError } from '../../src/errors';
+import {
+  DataReferenceError,
+  SerializerNotRegisteredError,
+  TopLevelDocumentError,
+} from '../../src/errors';
 
 
 describe('Serializer', function () {
@@ -113,13 +117,14 @@ describe('Serializer', function () {
 
         expect(jsonapi).to.be.an.object();
 
-        const { id, type, attributes, relationships } = jsonapi.data;
+        const { id, type, attributes, relationships, links } = jsonapi.data;
 
         expect(id).to.be.equal(1);
         expect(type).to.be.equal('test');
         expect(attributes.name).to.be.equal(data.name);
         expect(attributes.email).to.be.equal(data.email);
         expect(relationships).to.be.undefined();
+        expect(links).to.be.undefined();
 
         done();
       });
@@ -142,13 +147,14 @@ describe('Serializer', function () {
         expect(jsonapi).to.be.an.object();
         expect(jsonapi.data).to.be.an.array();
 
-        const { id, type, attributes, relationships } = jsonapi.data[0];
+        const { id, type, attributes, relationships, links } = jsonapi.data[0];
 
         expect(id).to.be.equal(1);
         expect(type).to.be.equal('test');
         expect(attributes.name).to.be.equal(data[0].name);
         expect(attributes.email).to.be.equal(data[0].email);
         expect(relationships).to.be.undefined();
+        expect(links).to.be.undefined();
 
         done();
       });
@@ -175,9 +181,44 @@ describe('Serializer', function () {
       });
     });
 
+    describe('data links', function () {
+      it(`generates the data links for resource objects`, function (done) {
+        const schema = {
+          attributes: ['name', 'email'],
+          links: {
+            self: (data) => `http://github.com/api/person/${data.id}`,
+            related: (data) => `http://github.com/api/account/relationships/person`,
+          }
+        };
+        const serializer = Serializer('test', schema);
+        const data = {
+          id: 1,
+          name: 'Alex',
+          email: '123alex@aaaas.com',
+        };
+
+        const jsonapi = serializer.serialize({ data });
+
+        expect(jsonapi).to.be.an.object();
+
+        const { id, type, attributes, links, relationships } = jsonapi.data;
+
+        expect(id).to.be.equal(1);
+        expect(type).to.be.equal('test');
+        expect(attributes.name).to.be.equal(data.name);
+        expect(attributes.email).to.be.equal(data.email);
+        expect(links).to.be.an.object();
+        expect(links.self).to.be.equal('http://github.com/api/person/1');
+        expect(links.related).to.be.equal('http://github.com/api/account/relationships/person');
+        expect(relationships).to.be.undefined();
+
+        done();
+      });
+    });
+
     describe('included and data relationships', function () {
       it(`serializes the included and data relationships`, function (done) {
-        var schema = {
+        const schema = {
           attributes: ['name', 'phone'],
           relationships: {
             address: {
@@ -190,8 +231,8 @@ describe('Serializer', function () {
           }
         };
         const serializer = Serializer('test', schema);
-        var payload = { id: 1, name: 'Joe', phone: '9008881234' };
-        var includedPayload = {
+        const payload = { id: 1, name: 'Joe', phone: '9008881234' };
+        const includedPayload = {
           address: {
             id: 2,
             street: '123 Street Ave.',
@@ -223,12 +264,12 @@ describe('Serializer', function () {
       });
 
       it(`serializes the included and data relationships using a string as the serializer reference`, function (done) {
-        var addressSchema = {
+        const addressSchema = {
           type: 'address',
           attributes: ['street', 'city'],
         };
         const addressSerializer = Serializer('address', addressSchema);
-        var personSchema = {
+        const personSchema = {
           attributes: ['name', 'phone'],
           relationships: {
             address: {
@@ -246,8 +287,8 @@ describe('Serializer', function () {
 
         // Test
 
-        var payload = { id: 1, name: 'Joe', phone: '9008881234' };
-        var includedPayload = {
+        const payload = { id: 1, name: 'Joe', phone: '9008881234' };
+        const includedPayload = {
           address: {
             id: 2,
             street: '123 Street Ave.',
@@ -284,12 +325,12 @@ describe('Serializer', function () {
       });
 
       it(`serializes the included and data relationships using a nested serializer reference`, function (done) {
-        var addressSchema = {
+        const addressSchema = {
           type: 'address',
           attributes: ['street', 'city'],
         };
         const addressSerializer = Serializer('address', addressSchema);
-        var personSchema = {
+        const personSchema = {
           attributes: ['name', 'phone'],
           relationships: {
             address: {
@@ -302,8 +343,8 @@ describe('Serializer', function () {
 
         // Test
 
-        var payload = { id: 1, name: 'Joe', phone: '9008881234' };
-        var includedPayload = {
+        const payload = { id: 1, name: 'Joe', phone: '9008881234' };
+        const includedPayload = {
           address: {
             id: 2,
             street: '123 Street Ave.',
@@ -337,7 +378,7 @@ describe('Serializer', function () {
       });
 
       it(`serializes the included and data relationships with multiple unique included`, function (done) {
-        var personSchema = {
+        const personSchema = {
           attributes: ['name', 'phone'],
           relationships: {
             address: {
@@ -360,8 +401,8 @@ describe('Serializer', function () {
           }
         };
         const serializer = Serializer('person', personSchema);
-        var payload = { id: 1, name: 'Joe' };
-        var includedPayload = {
+        const payload = { id: 1, name: 'Joe' };
+        const includedPayload = {
           phone: {
             uuid: 99,
             areaCode: '888',
@@ -412,7 +453,7 @@ describe('Serializer', function () {
       });
 
       it(`throws SerializerNotRegisteredError when attempting to nest an unregistered serializer`, function (done) {
-        var personSchema = {
+        const personSchema = {
           attributes: ['name', 'phone'],
           relationships: {
             address: {
@@ -422,8 +463,8 @@ describe('Serializer', function () {
           }
         };
         const serializer = Serializer('person', personSchema);
-        var payload = { id: 1, name: 'Joe' };
-        var includedPayload = {
+        const payload = { id: 1, name: 'Joe' };
+        const includedPayload = {
           address: {
             id: 2,
             street: '123 Street Ave.',
@@ -438,6 +479,43 @@ describe('Serializer', function () {
 
         expect(throws).to.throw(SerializerNotRegisteredError);
 
+
+        done();
+      });
+
+      it(`doesn't include the included top level member if there is no data`, function (done) {
+        const schema = {
+          attributes: ['name', 'phone'],
+          relationships: {
+            address: {
+              serializer: {
+                type: 'address',
+                attributes: ['street', 'city'],
+              },
+              relationshipType: HasMany('personId')
+            }
+          }
+        };
+        const serializer = Serializer('test', schema);
+        const payload = void 0;
+        const includedPayload = {
+          address: {
+            id: 2,
+            street: '123 Street Ave.',
+            city: 'Lansing',
+            personId: 1,
+          }
+        };
+        const meta = { count: 100 };
+
+        const jsonapi = serializer.serialize({ data: payload, included: includedPayload, meta });
+
+        const { data, included } = jsonapi;
+
+        expect(data).to.be.undefined();
+        expect(included).to.be.undefined();
+        expect(meta).to.be.an.object();
+        expect(meta.count).to.equal(100);
 
         done();
       });
@@ -459,8 +537,56 @@ describe('Serializer', function () {
         expect(jsonapi.data).to.be.undefined();
         expect(jsonapi.errors).to.be.undefined();
         expect(jsonapi.includes).to.be.undefined();
+        expect(jsonapi.links).to.be.undefined();
         expect(jsonapi.meta).to.be.an.object();
         expect(jsonapi.meta.count).to.equal(100);
+
+        done();
+      });
+    });
+
+    describe('links', function () {
+      it(`serialize the top level links with self`, function (done) {
+        const schema = {
+          attributes: ['name', 'email'],
+        };
+        const serializer = Serializer('test', schema);
+        const meta = {
+          count: 100,
+        };
+        const links = {
+          self: 'http://github.com/digia/jaysonapi',
+        };
+
+        // Include meta for the sake of the standard
+        // Top level must have one of the following: data, errors, meta
+        const jsonapi = serializer.serialize({ meta, links });
+
+        expect(jsonapi).to.be.an.object();
+        expect(jsonapi.data).to.be.undefined();
+        expect(jsonapi.errors).to.be.undefined();
+        expect(jsonapi.includes).to.be.undefined();
+        expect(jsonapi.meta).to.be.an.object();
+        expect(jsonapi.links).to.be.an.object();
+        expect(jsonapi.links.self).to.be.equal(links.self);
+
+        done();
+      });
+
+      it(`throws TopLevelDocumentError if only links is included`, function (done) {
+        const schema = {
+          attributes: ['name', 'email'],
+        };
+        const serializer = Serializer('test', schema);
+        const links = {
+          self: 'http://github.com/digia/jaysonapi',
+        };
+
+        function throws() {
+          serializer.serialize({ links });
+        }
+
+        expect(throws).to.throw(TopLevelDocumentError);
 
         done();
       });

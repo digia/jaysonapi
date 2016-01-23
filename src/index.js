@@ -17,6 +17,7 @@ import {
 import {
   DataReferenceError,
   SerializerNotRegisteredError,
+  TopLevelDocumentError,
 } from './errors';
 import { HasMany, BelongsTo } from './relationships';
 import DefaultRegistry from './registry';
@@ -34,7 +35,7 @@ export default function Serializer(
 ) {
   const config = Defaults(configuration, defaultConfig);
   const { ref, registry } = config;
-  const { attributes, relationships } = serializerSchema;
+  const { attributes, relationships, links } = serializerSchema;
 
   /**
    * Parse Serializer
@@ -103,6 +104,20 @@ export default function Serializer(
     }, {});
   }
 
+  function processDataLinks(data) {
+    const toProcess = Pick(links, ['self', 'related']);
+
+    if (IsEmpty(toProcess)) {
+      return void 0;
+    }
+
+    return Reduce(toProcess, (accum, fn, key) => {
+      accum[key] = fn(data);
+
+      return accum;
+    }, {});
+  }
+
   /**
    * Process Data
    *
@@ -135,12 +150,14 @@ export default function Serializer(
 
     const serializedAttributes = Pick(data, attributes);
     const serializedRelationships = processDataRelationships(data, included);
+    const serializedLinks = processDataLinks(data);
 
     const resourceObject = {
       type,
       [ref]: refValue,
       attributes: IsEmpty(serializedAttributes) ? void 0 : serializedAttributes,
       relationships: serializedRelationships,
+      links: serializedLinks,
     };
 
     return Chain(resourceObject)
@@ -193,13 +210,43 @@ export default function Serializer(
     .value();
   }
 
-  function serialize({ data, included, meta, errors } = {}) { // eslint-disable-line
+  function processTopLevelLinks(links) {
+    // self: the link that generated the current response document.
+    // related: a related resource link when the primary data represents a resource relationship.
+    // pagination: pagination links for the primary data.
+    const topLevelLinks = Pick(links, ['self', 'related', 'pagination']);
+
+    if (IsEmpty(topLevelLinks)) {
+      return void 0;
+    }
+
+    return topLevelLinks;
+  }
+
+  function serialize({ data, included, meta, links, errors } = {}) { // eslint-disable-line
     const serialized = {
       data: processData(data, included),
       included: processIncluded(included),
       meta,
+      links: processTopLevelLinks(links),
       errors,
     };
+
+    if (IsUndefined(serialized.data) &&
+        IsEmpty(serialized.errors) &&
+        IsEmpty(serialized.meta)) {
+      const msg = `One of the following must be included data, errors, meta`;
+      throw new TopLevelDocumentError(msg);
+    }
+
+    // "If a document does not contain a top-level data key, the included member
+    // MUST NOT be present either."
+    if (IsUndefined(serialized.data) && !IsUndefined(serialized.included)) {
+      return Chain(serialized)
+      .omit('included')
+      .omitBy(IsUndefined)
+      .value();
+    }
 
     return OmitBy(serialized, IsUndefined);
   }
