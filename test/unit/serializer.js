@@ -119,7 +119,7 @@ describe('Serializer', function () {
 
         const { id, type, attributes, relationships, links } = jsonapi.data;
 
-        expect(id).to.be.equal(1);
+        expect(id).to.be.equal('1');
         expect(type).to.be.equal('test');
         expect(attributes.name).to.be.equal(data.name);
         expect(attributes.email).to.be.equal(data.email);
@@ -149,7 +149,7 @@ describe('Serializer', function () {
 
         const { id, type, attributes, relationships, links } = jsonapi.data[0];
 
-        expect(id).to.be.equal(1);
+        expect(id).to.be.equal('1');
         expect(type).to.be.equal('test');
         expect(attributes.name).to.be.equal(data[0].name);
         expect(attributes.email).to.be.equal(data[0].email);
@@ -203,7 +203,7 @@ describe('Serializer', function () {
 
         const { id, type, attributes, links, relationships } = jsonapi.data;
 
-        expect(id).to.be.equal(1);
+        expect(id).to.be.equal('1');
         expect(type).to.be.equal('test');
         expect(attributes.name).to.be.equal(data.name);
         expect(attributes.email).to.be.equal(data.email);
@@ -251,14 +251,14 @@ describe('Serializer', function () {
         const address = included[0];
 
         expect(address.type).to.equal(schema.relationships.address.serializer.type);
-        expect(address.id).to.equal(includedPayload.address.id);
+        expect(address.id).to.equal(String(includedPayload.address.id));
 
         const { relationships } = data;
 
         expect(relationships).to.be.an.object();
 
         expect(relationships.address.data.type).to.equal(schema.relationships.address.serializer.type);
-        expect(relationships.address.data.id).to.equal(includedPayload.address.id);
+        expect(relationships.address.data.id).to.equal(String(includedPayload.address.id));
 
         done();
       });
@@ -307,7 +307,7 @@ describe('Serializer', function () {
         const address = included[0];
 
         expect(address.type).to.equal('address');
-        expect(address.id).to.equal(2);
+        expect(address.id).to.equal('2');
         expect(address.attributes.street).to.equal('123 Street Ave.');
         expect(address.attributes.city).to.equal('Lansing');
 
@@ -316,7 +316,7 @@ describe('Serializer', function () {
         expect(relationships).to.be.an.object();
 
         expect(relationships.address.data.type).to.equal('address');
-        expect(relationships.address.data.id).to.equal(2);
+        expect(relationships.address.data.id).to.equal('2');
 
 
         Registry.empty(); // Clean up for the error test later on
@@ -363,7 +363,7 @@ describe('Serializer', function () {
         const address = included[0];
 
         expect(address.type).to.equal('address');
-        expect(address.id).to.equal(2);
+        expect(address.id).to.equal('2');
         expect(address.attributes.street).to.equal('123 Street Ave.');
         expect(address.attributes.city).to.equal('Lansing');
 
@@ -372,7 +372,7 @@ describe('Serializer', function () {
         expect(relationships).to.be.an.object();
 
         expect(relationships.address.data.type).to.equal('address');
-        expect(relationships.address.data.id).to.equal(2);
+        expect(relationships.address.data.id).to.equal('2');
 
         done();
       });
@@ -444,7 +444,7 @@ describe('Serializer', function () {
         expect(relationships.address.data).to.be.an.array();
         expect(relationships.address.data).to.be.length(2);
         expect(relationships.phone.data).to.be.an.object();
-        expect(relationships.phone.data.uuid).to.be.equal(99);
+        expect(relationships.phone.data.uuid).to.be.equal('99');
         expect(relationships.phone.data.type).to.be.equal('phone');
         // TODO(digia): Testing undefined attributes need to be it's own test.
         expect(relationships.phone.data.attributes).to.be.undefined();

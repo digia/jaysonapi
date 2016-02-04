@@ -11,7 +11,7 @@ function generateRelation(type, ref, refValue) {
   return {
     data: {
       type,
-      [ref]: refValue,
+      [ref]: String(refValue),
     },
   };
 }
