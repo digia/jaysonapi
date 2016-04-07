@@ -86,7 +86,7 @@ export default function Serializer(
       return undefined;
     }
 
-    return Reduce(toInclude, (accum, relationData, relationName) => {
+    const relationships = Reduce(toInclude, (accum, relationData, relationName) => {
       const relation = Get(relationships, relationName);
       const relationSerializer = parseSerializer(relation.serializer);
       const relationParser = relation.relationshipType;
@@ -96,12 +96,17 @@ export default function Serializer(
 
       const parsedRelation = relationParser(relationSerializer, parserData, relationData);
 
-      if (IsNull(parsedRelation)) {
+      if (IsNull(parsedRelation) ||
+          IsArray(parsedRelation.data) && IsEmpty(parsedRelation.data)) {
         return accum;
       }
 
       return Set(accum, relationName, parsedRelation);
     }, {});
+
+    return IsEmpty(relationships)
+    ? undefined
+    : relationships;
   }
 
   function processDataLinks(data) {
@@ -154,7 +159,7 @@ export default function Serializer(
 
     const resourceObject = {
       type,
-      [ref]: refValue,
+      [ref]: String(refValue),
       attributes: IsEmpty(serializedAttributes) ? undefined : serializedAttributes,
       relationships: serializedRelationships,
       links: serializedLinks,
@@ -237,9 +242,9 @@ export default function Serializer(
       throw new TopLevelDocumentError(msg);
     }
 
-    // "If a document does not contain a top-level data key, the included member
-    // MUST NOT be present either."
-    if (IsUndefined(serialized.data) && !IsUndefined(serialized.included)) {
+    // "If a document does not contain a top-level data key - or data is empty,
+    // the included member MUST NOT be present either."
+    if (IsUndefined(serialized.data) || IsEmpty(serialized.data) && !IsUndefined(serialized.included)) {
       return Chain(serialized)
       .omit('included')
       .omitBy(IsUndefined)

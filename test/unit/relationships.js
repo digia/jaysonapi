@@ -17,7 +17,7 @@ describe('Relationships', function () {
       expect(result).to.be.an.object();
       expect(result.data).to.be.an.object();
       expect(result.data.type).to.equal('person');
-      expect(result.data.id).to.equal(3);
+      expect(result.data.id).to.equal('3');
 
       done();
     });
@@ -52,7 +52,7 @@ describe('Relationships', function () {
       expect(result).to.be.an.object();
       expect(result.data).to.be.an.object();
       expect(result.data.type).to.equal('address');
-      expect(result.data.id).to.equal(1);
+      expect(result.data.id).to.equal('1');
 
       done();
     });
@@ -76,7 +76,7 @@ describe('Relationships', function () {
       expect(result.data).to.be.an.array();
       expect(result.data.length).to.equal(3);
       expect(result.data[0].type).to.be.a.string();
-      expect(result.data[0].uuid).to.be.a.number();
+      expect(result.data[0].uuid).to.be.a.string();
 
       done();
     });

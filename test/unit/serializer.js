@@ -119,7 +119,7 @@ describe('Serializer', function () {
 
         const { id, type, attributes, relationships, links } = jsonapi.data;
 
-        expect(id).to.be.equal(1);
+        expect(id).to.be.equal('1');
         expect(type).to.be.equal('test');
         expect(attributes.name).to.be.equal(data.name);
         expect(attributes.email).to.be.equal(data.email);
@@ -149,7 +149,7 @@ describe('Serializer', function () {
 
         const { id, type, attributes, relationships, links } = jsonapi.data[0];
 
-        expect(id).to.be.equal(1);
+        expect(id).to.be.equal('1');
         expect(type).to.be.equal('test');
         expect(attributes.name).to.be.equal(data[0].name);
         expect(attributes.email).to.be.equal(data[0].email);
@@ -203,7 +203,7 @@ describe('Serializer', function () {
 
         const { id, type, attributes, links, relationships } = jsonapi.data;
 
-        expect(id).to.be.equal(1);
+        expect(id).to.be.equal('1');
         expect(type).to.be.equal('test');
         expect(attributes.name).to.be.equal(data.name);
         expect(attributes.email).to.be.equal(data.email);
@@ -251,14 +251,14 @@ describe('Serializer', function () {
         const address = included[0];
 
         expect(address.type).to.equal(schema.relationships.address.serializer.type);
-        expect(address.id).to.equal(includedPayload.address.id);
+        expect(address.id).to.equal(String(includedPayload.address.id));
 
         const { relationships } = data;
 
         expect(relationships).to.be.an.object();
 
         expect(relationships.address.data.type).to.equal(schema.relationships.address.serializer.type);
-        expect(relationships.address.data.id).to.equal(includedPayload.address.id);
+        expect(relationships.address.data.id).to.equal(String(includedPayload.address.id));
 
         done();
       });
@@ -307,7 +307,7 @@ describe('Serializer', function () {
         const address = included[0];
 
         expect(address.type).to.equal('address');
-        expect(address.id).to.equal(2);
+        expect(address.id).to.equal('2');
         expect(address.attributes.street).to.equal('123 Street Ave.');
         expect(address.attributes.city).to.equal('Lansing');
 
@@ -316,7 +316,7 @@ describe('Serializer', function () {
         expect(relationships).to.be.an.object();
 
         expect(relationships.address.data.type).to.equal('address');
-        expect(relationships.address.data.id).to.equal(2);
+        expect(relationships.address.data.id).to.equal('2');
 
 
         Registry.empty(); // Clean up for the error test later on
@@ -363,7 +363,7 @@ describe('Serializer', function () {
         const address = included[0];
 
         expect(address.type).to.equal('address');
-        expect(address.id).to.equal(2);
+        expect(address.id).to.equal('2');
         expect(address.attributes.street).to.equal('123 Street Ave.');
         expect(address.attributes.city).to.equal('Lansing');
 
@@ -372,7 +372,7 @@ describe('Serializer', function () {
         expect(relationships).to.be.an.object();
 
         expect(relationships.address.data.type).to.equal('address');
-        expect(relationships.address.data.id).to.equal(2);
+        expect(relationships.address.data.id).to.equal('2');
 
         done();
       });
@@ -444,7 +444,7 @@ describe('Serializer', function () {
         expect(relationships.address.data).to.be.an.array();
         expect(relationships.address.data).to.be.length(2);
         expect(relationships.phone.data).to.be.an.object();
-        expect(relationships.phone.data.uuid).to.be.equal(99);
+        expect(relationships.phone.data.uuid).to.be.equal('99');
         expect(relationships.phone.data.type).to.be.equal('phone');
         // TODO(digia): Testing undefined attributes need to be it's own test.
         expect(relationships.phone.data.attributes).to.be.undefined();
@@ -483,6 +483,43 @@ describe('Serializer', function () {
         done();
       });
 
+      it.only(`doesn't include data's relationships if there are none`, function (done) {
+        const schema = {
+          attributes: ['name', 'phone'],
+          relationships: {
+            address: {
+              serializer: {
+                type: 'address',
+                attributes: ['street', 'city'],
+              },
+              relationshipType: HasMany('personId')
+            }
+          }
+        };
+        const serializer = Serializer('test', schema);
+        const payload = { id: 1, name: 'Joe', phone: '8889991234' };
+
+        // NOTE(digia): No address personIds match the payload id of 1
+        const includedPayload = {
+          address: [{
+            id: 1,
+            street: '123 i dont match',
+            city: 'Lansing',
+            personId: 2,
+          }]
+        };
+
+        const jsonapi = serializer.serialize({ data: payload, included: includedPayload });
+
+        const { data, included } = jsonapi;
+
+        expect(data.relationships).to.be.undefined();
+        expect(included).to.be.an.array();
+
+        done();
+      });
+
+
       it(`doesn't include the included top level member if there is no data`, function (done) {
         const schema = {
           attributes: ['name', 'phone'],
@@ -497,7 +534,7 @@ describe('Serializer', function () {
           }
         };
         const serializer = Serializer('test', schema);
-        const payload = void 0;
+        const payload = undefined;
         const includedPayload = {
           address: {
             id: 2,
@@ -516,6 +553,40 @@ describe('Serializer', function () {
         expect(included).to.be.undefined();
         expect(meta).to.be.an.object();
         expect(meta.count).to.equal(100);
+
+        done();
+      });
+
+      it(`doesn't include the included top level member if data is an empty array`, function (done) {
+        const schema = {
+          attributes: ['name', 'phone'],
+          relationships: {
+            address: {
+              serializer: {
+                type: 'address',
+                attributes: ['street', 'city'],
+              },
+              relationshipType: HasMany('personId')
+            }
+          }
+        };
+        const serializer = Serializer('test', schema);
+        const payload = [];
+        const includedPayload = {
+          address: {
+            id: 2,
+            street: '123 Street Ave.',
+            city: 'Lansing',
+            personId: 1,
+          }
+        };
+
+        const jsonapi = serializer.serialize({ data: payload, included: includedPayload });
+
+        const { data, included } = jsonapi;
+
+        expect(data).to.be.length(0);
+        expect(included).to.be.undefined();
 
         done();
       });
