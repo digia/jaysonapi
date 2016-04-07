@@ -483,6 +483,43 @@ describe('Serializer', function () {
         done();
       });
 
+      it.only(`doesn't include data's relationships if there are none`, function (done) {
+        const schema = {
+          attributes: ['name', 'phone'],
+          relationships: {
+            address: {
+              serializer: {
+                type: 'address',
+                attributes: ['street', 'city'],
+              },
+              relationshipType: HasMany('personId')
+            }
+          }
+        };
+        const serializer = Serializer('test', schema);
+        const payload = { id: 1, name: 'Joe', phone: '8889991234' };
+
+        // NOTE(digia): No address personIds match the payload id of 1
+        const includedPayload = {
+          address: [{
+            id: 1,
+            street: '123 i dont match',
+            city: 'Lansing',
+            personId: 2,
+          }]
+        };
+
+        const jsonapi = serializer.serialize({ data: payload, included: includedPayload });
+
+        const { data, included } = jsonapi;
+
+        expect(data.relationships).to.be.undefined();
+        expect(included).to.be.an.array();
+
+        done();
+      });
+
+
       it(`doesn't include the included top level member if there is no data`, function (done) {
         const schema = {
           attributes: ['name', 'phone'],

@@ -86,7 +86,7 @@ export default function Serializer(
       return undefined;
     }
 
-    return Reduce(toInclude, (accum, relationData, relationName) => {
+    const relationships = Reduce(toInclude, (accum, relationData, relationName) => {
       const relation = Get(relationships, relationName);
       const relationSerializer = parseSerializer(relation.serializer);
       const relationParser = relation.relationshipType;
@@ -96,12 +96,17 @@ export default function Serializer(
 
       const parsedRelation = relationParser(relationSerializer, parserData, relationData);
 
-      if (IsNull(parsedRelation)) {
+      if (IsNull(parsedRelation) ||
+          IsArray(parsedRelation.data) && IsEmpty(parsedRelation.data)) {
         return accum;
       }
 
       return Set(accum, relationName, parsedRelation);
     }, {});
+
+    return IsEmpty(relationships)
+    ? undefined
+    : relationships;
   }
 
   function processDataLinks(data) {
