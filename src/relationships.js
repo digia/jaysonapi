@@ -25,23 +25,36 @@ function handleArrayParse(schema, reference, potentialRelation, parseFn) {
   }
 
   return Chain(relationList)
-  .omitBy(IsNull)
-  .map(d => d.data)
-  .uniqWith((c, cTo) => {
-    return c.type === cTo.type && Get(c, schema.ref) === Get(cTo, schema.ref);
-  })
-  .reduce((accum, d) => {
-    accum.data.push(d);
+    .omitBy(IsNull)
+    .map(d => d.data)
+    .uniqWith((c, cTo) => {
+      return c.type === cTo.type && Get(c, schema.ref) === Get(cTo, schema.ref);
+    })
+    .reduce((accum, d) => {
+      accum.data.push(d);
 
-    return accum;
-  }, { data: [] })
-  .value();
+      return accum;
+    }, { data: [] })
+    .value();
 }
 
 export function BelongsTo(refOnReferencee) {
   function parseBelongsTo(relationSchema, referencee, potentialRelation) {
     if (IsArray(potentialRelation)) {
-      return handleArrayParse(relationSchema, referencee, potentialRelation, parseBelongsTo);
+      const result = handleArrayParse(
+        relationSchema,
+        referencee,
+        potentialRelation,
+        parseBelongsTo
+      );
+
+      if (result && result.data.length) {
+        result.data = result.data[0];
+
+        return result;
+      }
+
+      return null;
     }
 
     const refValueOnReferencee = Get(referencee, refOnReferencee);
