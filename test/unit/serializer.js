@@ -497,7 +497,7 @@ describe('Serializer', function () {
           }
         };
         const serializer = Serializer('test', schema);
-        const payload = void 0;
+        const payload = undefined;
         const includedPayload = {
           address: {
             id: 2,
