@@ -57,6 +57,39 @@ describe('Relationships', function () {
       done();
     });
 
+    it('should parse a has many relationship when the relationship is an array', function (done) {
+      var referenceAttribute = 'personId';
+      var schema = { type: 'address', ref: 'id' };
+      var referenceeData = 1;
+      var relationshipData = { personId: [1, 2], id: 1 };
+
+      var hasMany = HasMany(referenceAttribute);
+
+      var result = hasMany(schema, referenceeData, relationshipData);
+
+      expect(result).to.be.an.object();
+      expect(result.data).to.be.an.object();
+      expect(result.data.type).to.equal('address');
+      expect(result.data.id).to.equal('1');
+
+      done();
+    });
+
+    it(`should return null if the relationship data ref array doesn't include the reference value`, function (done) {
+      var referenceAttribute = 'personId';
+      var schema = { type: 'address', ref: 'id' };
+      var referenceeData = 1;
+      var relationshipData = { personId: [2, 3], id: 1 };
+
+      var hasMany = HasMany(referenceAttribute);
+
+      var result = hasMany(schema, referenceeData, relationshipData);
+
+      expect(result).to.be.null();
+
+      done();
+    });
+
     it('should parse an array of has many relationships', function (done) {
       var referenceAttribute = 'personId';
       var schema = { type: 'address', ref: 'uuid' };

@@ -230,8 +230,10 @@ describe('Serializer', function () {
             }
           }
         };
+
         const serializer = Serializer('test', schema);
         const payload = { id: 1, name: 'Joe', phone: '9008881234' };
+
         const includedPayload = {
           address: {
             id: 2,
@@ -259,6 +261,97 @@ describe('Serializer', function () {
 
         expect(relationships.address.data.type).to.equal(schema.relationships.address.serializer.type);
         expect(relationships.address.data.id).to.equal(String(includedPayload.address.id));
+
+        done();
+      });
+
+      it(`serializes the included and data relationships when it's a hasMany with multiple reference values`, function (done) {
+        const schema = {
+          attributes: ['name', 'phone'],
+          relationships: {
+            address: {
+              serializer: {
+                type: 'address',
+                attributes: ['street', 'city'],
+              },
+              relationshipType: HasMany('personId')
+            }
+          }
+        };
+
+        const serializer = Serializer('test', schema);
+        const payload = { id: 1, name: 'Joe', phone: '9008881234' };
+
+        const includedPayload = {
+          address: {
+            id: 2,
+            street: '123 Street Ave.',
+            city: 'Lansing',
+            personId: [1, 2],
+          }
+        };
+
+        const jsonapi = serializer.serialize({ data: payload, included: includedPayload });
+
+        const { data, included } = jsonapi;
+
+        expect(included).to.be.an.array();
+        expect(included).to.be.length(1);
+
+        const address = included[0];
+
+        expect(address.type).to.equal(schema.relationships.address.serializer.type);
+        expect(address.id).to.equal(String(includedPayload.address.id));
+
+        const { relationships } = data;
+
+        expect(relationships).to.be.an.object();
+
+        expect(relationships.address.data.type).to.equal(schema.relationships.address.serializer.type);
+        expect(relationships.address.data.id).to.equal(String(includedPayload.address.id));
+
+        done();
+      });
+
+      it(`doesn't serialize the data relationships when it's a hasMany with multiple reference values and none of them match`, function (done) {
+        const schema = {
+          attributes: ['name', 'phone'],
+          relationships: {
+            address: {
+              serializer: {
+                type: 'address',
+                attributes: ['street', 'city'],
+              },
+              relationshipType: HasMany('personId')
+            }
+          }
+        };
+
+        const serializer = Serializer('test', schema);
+        const payload = { id: 1, name: 'Joe', phone: '9008881234' };
+
+        const includedPayload = {
+          address: {
+            id: 2,
+            street: '123 Street Ave.',
+            city: 'Lansing',
+            personId: [2, 3],
+          }
+        };
+
+        const jsonapi = serializer.serialize({ data: payload, included: includedPayload });
+
+        const { data, included } = jsonapi;
+
+        expect(included).to.be.an.array();
+        expect(included).to.be.length(1);
+
+        const address = included[0];
+
+        expect(address.type).to.equal(schema.relationships.address.serializer.type);
+        expect(address.id).to.equal(String(includedPayload.address.id));
+
+        expect(data.relationships).to.be.undefined()
 
         done();
       });
@@ -483,7 +576,7 @@ describe('Serializer', function () {
         done();
       });
 
-      it.only(`doesn't include data's relationships if there are none`, function (done) {
+      it(`doesn't include data's relationships if there are none`, function (done) {
         const schema = {
           attributes: ['name', 'phone'],
           relationships: {
