@@ -217,7 +217,7 @@ describe('Serializer', function () {
     });
 
     describe('included and data relationships', function () {
-      it(`serializes the included and data relationships`, function (done) {
+      it(`serializes the included and data hasMany relationships`, function (done) {
         const schema = {
           attributes: ['name', 'phone'],
           relationships: {
@@ -312,6 +312,98 @@ describe('Serializer', function () {
 
         done();
       });
+
+      it(`serializes the included and data belongsTo relationship`, function (done) {
+        const schema = {
+          attributes: ['text'],
+          relationships: {
+            person: {
+              serializer: {
+                type: 'person',
+                attributes: ['name', 'phone'],
+              },
+              relationshipType: BelongsTo('personId')
+            }
+          }
+        };
+
+        const serializer = Serializer('test', schema);
+        const payload = { id: 2, text: 'This is my awesome comment', personId: 1 };
+
+        const includedPayload = {
+          person: {
+            id: 1,
+            name: 'Joe',
+            phone: '8881231234',
+          }
+        };
+
+        const jsonapi = serializer.serialize({ data: payload, included: includedPayload });
+
+        const { data, included } = jsonapi;
+
+        expect(included).to.be.an.array();
+        expect(included).to.be.length(1);
+
+        const person = included[0];
+
+        expect(person.type).to.equal(schema.relationships.person.serializer.type);
+        expect(person.id).to.equal(String(includedPayload.person.id));
+
+        const { relationships } = data;
+
+        expect(relationships.person.data.type).to.equal(schema.relationships.person.serializer.type);
+        expect(relationships.person.data.id).to.equal(String(includedPayload.person.id));
+
+        done();
+      });
+
+      it(`serializes the included and data belongsTo relationship when included relationship is an array`, function (done) {
+        const schema = {
+          attributes: ['text'],
+          relationships: {
+            person: {
+              serializer: {
+                type: 'person',
+                attributes: ['name', 'phone'],
+              },
+              relationshipType: BelongsTo('personId')
+            }
+          }
+        };
+
+        const serializer = Serializer('test', schema);
+        const payload = { id: 2, text: 'This is my awesome comment', personId: 1 };
+
+        const includedPayload = {
+          person: [{
+            id: 1,
+            name: 'Joe',
+            phone: '8881231234',
+          }]
+        };
+
+        const jsonapi = serializer.serialize({ data: payload, included: includedPayload });
+
+        const { data, included } = jsonapi;
+
+        expect(included).to.be.an.array();
+        expect(included).to.be.length(1);
+
+        const person = included[0];
+
+        expect(person.type).to.equal(schema.relationships.person.serializer.type);
+        expect(person.id).to.equal(String(includedPayload.person[0].id));
+
+        const { relationships } = data;
+
+        expect(relationships.person.data.type).to.equal(schema.relationships.person.serializer.type);
+        expect(relationships.person.data.id).to.equal(String(includedPayload.person[0].id));
+
+        done();
+      });
+
+
 
       it(`doesn't serialize the data relationships when it's a hasMany with multiple reference values and none of them match`, function (done) {
         const schema = {
