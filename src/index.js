@@ -237,9 +237,9 @@ export default function Serializer(
       throw new TopLevelDocumentError(msg);
     }
 
-    // "If a document does not contain a top-level data key, the included member
-    // MUST NOT be present either."
-    if (IsUndefined(serialized.data) && !IsUndefined(serialized.included)) {
+    // "If a document does not contain a top-level data key - or data is empty,
+    // the included member MUST NOT be present either."
+    if (IsUndefined(serialized.data) || IsEmpty(serialized.data) && !IsUndefined(serialized.included)) {
       return Chain(serialized)
       .omit('included')
       .omitBy(IsUndefined)

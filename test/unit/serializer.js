@@ -519,6 +519,40 @@ describe('Serializer', function () {
 
         done();
       });
+
+      it.only(`doesn't include the included top level member if data is an empty array`, function (done) {
+        const schema = {
+          attributes: ['name', 'phone'],
+          relationships: {
+            address: {
+              serializer: {
+                type: 'address',
+                attributes: ['street', 'city'],
+              },
+              relationshipType: HasMany('personId')
+            }
+          }
+        };
+        const serializer = Serializer('test', schema);
+        const payload = [];
+        const includedPayload = {
+          address: {
+            id: 2,
+            street: '123 Street Ave.',
+            city: 'Lansing',
+            personId: 1,
+          }
+        };
+
+        const jsonapi = serializer.serialize({ data: payload, included: includedPayload });
+
+        const { data, included } = jsonapi;
+
+        expect(data).to.be.length(0);
+        expect(included).to.be.undefined();
+
+        done();
+      });
     });
 
     describe('meta', function () {
