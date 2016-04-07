@@ -86,7 +86,7 @@ export default function Serializer(
       return undefined;
     }
 
-    const relationships = Reduce(toInclude, (accum, relationData, relationName) => {
+    const dataRelationships = Reduce(toInclude, (accum, relationData, relationName) => {
       const relation = Get(relationships, relationName);
       const relationSerializer = parseSerializer(relation.serializer);
       const relationParser = relation.relationshipType;
@@ -104,9 +104,9 @@ export default function Serializer(
       return Set(accum, relationName, parsedRelation);
     }, {});
 
-    return IsEmpty(relationships)
+    return IsEmpty(dataRelationships)
     ? undefined
-    : relationships;
+    : dataRelationships;
   }
 
   function processDataLinks(data) {

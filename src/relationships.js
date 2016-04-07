@@ -4,6 +4,7 @@ import {
   isNull as IsNull,
   isUndefined as IsUndefined,
   get as Get,
+  includes as Includes,
 } from 'lodash';
 
 
@@ -74,9 +75,12 @@ export function HasMany(refOnRelation) {
     // or if the compareTo value from the potentialRelation doesn't match the
     // relationRef value from the refrencee then we'll return null as
     // there is no relation.
-    if (IsUndefined(refValueOnRelation) || refValueOnRelation !== refValue) {
+    if (IsUndefined(refValueOnRelation) ||
+        !IsArray(refValueOnRelation) && refValueOnRelation !== refValue ||
+        IsArray(refValueOnRelation) && !Includes(refValueOnRelation, refValue)) {
       return null;
     }
+
 
     return generateRelation(
       relationSchema.type,
