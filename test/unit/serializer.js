@@ -520,7 +520,7 @@ describe('Serializer', function () {
         done();
       });
 
-      it.only(`doesn't include the included top level member if data is an empty array`, function (done) {
+      it(`doesn't include the included top level member if data is an empty array`, function (done) {
         const schema = {
           attributes: ['name', 'phone'],
           relationships: {
