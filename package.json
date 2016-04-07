@@ -1,6 +1,6 @@
 {
   "name": "jaysonapi",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Framework agnostic JSON API serializer.",
   "main": "lib/index.js",
   "directories": {
