@@ -216,8 +216,14 @@ export default function Serializer(
   function processTopLevelLinks(links) {
     // self: the link that generated the current response document.
     // related: a related resource link when the primary data represents a resource relationship.
-    // pagination: pagination links for the primary data.
-    const topLevelLinks = Pick(links, ['self', 'related', 'pagination']);
+    // pagination: (Deprecated) pagination links for the primary data.
+    // first: the first page of data
+    // last: the last page of data
+    // prev: the previous page of data
+    // next: the next page of data
+    const topLevelLinks = Pick(links, [
+      'self', 'related', 'pagination', 'first', 'last', 'prev', 'next'
+    ]);
 
     if (IsEmpty(topLevelLinks)) {
       return undefined;
