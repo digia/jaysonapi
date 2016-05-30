@@ -829,6 +829,39 @@ describe('Serializer', function () {
         done();
       });
 
+      it(`serialize the top level links with pagination`, function (done) {
+        const schema = {
+          attributes: ['name', 'email'],
+        };
+        const serializer = Serializer('test', schema);
+        const meta = {
+          count: 100,
+        };
+        const links = {
+          first: 'http://github.com/digia/jaysonapi?page[number]=1',
+          last: 'http://github.com/digia/jaysonapi?page[number]=3',
+          prev: null,
+          next: 'http://github.com/digia/jaysonapi?page[number]=2',
+        };
+
+        // Include meta for the sake of the standard
+        // Top level must have one of the following: data, errors, meta
+        const jsonapi = serializer.serialize({ meta, links });
+
+        expect(jsonapi).to.be.an.object();
+        expect(jsonapi.data).to.be.undefined();
+        expect(jsonapi.errors).to.be.undefined();
+        expect(jsonapi.includes).to.be.undefined();
+        expect(jsonapi.meta).to.be.an.object();
+        expect(jsonapi.links).to.be.an.object();
+        expect(jsonapi.links.first).to.be.equal(links.first);
+        expect(jsonapi.links.last).to.be.equal(links.last);
+        expect(jsonapi.links.prev).to.be.equal(links.prev);
+        expect(jsonapi.links.next).to.be.equal(links.next);
+
+        done();
+      });
+
       it(`throws TopLevelDocumentError if only links is included`, function (done) {
         const schema = {
           attributes: ['name', 'email'],
