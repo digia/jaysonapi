@@ -8,7 +8,7 @@
   },
   "scripts": {
     "compile": "babel -d lib/ src/",
-    "test": "lab -C -v -g test/unit/test_*.js",
+    "test": "mocha",
     "prepublish": "npm run compile"
   },
   "repository": {
