@@ -1,4 +1,7 @@
 # jaysonapi
+
+[![Build Status](https://secure.travis-ci.org/digia/jaysonapi.svg?branch=master)](http://travis-ci.org/digia/jaysonapi)
+
 jaysonapi is a framework agnostic [JSON API](http://jsonapi.org/) v1.0.0 serializer.
 jaysonapi provides more of a functional approach to serializing your data.
 Define a serializer with a type and schema, and call serialize on it passing in
