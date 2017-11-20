@@ -33,8 +33,10 @@ the data, included, meta, errors, etc. as a plain object.
 - [Compound Document Usage](#compound-document-usage)
 
 <a name="basic-usage" />
+
 #### Example 1: Basic Usage
-```javascript
+
+```js
 // user-serializer.js
 import Serializer from 'jaysonapi';
 
@@ -90,7 +92,9 @@ handler(request, response) {
 ```
 
 <a name="compound-document-usage" />
+
 #### Example 2: Compound Document Usage
+
 ```javascript
 // account-serializer.js
 import Serializer, {
