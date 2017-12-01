@@ -32,12 +32,11 @@ the data, included, meta, errors, etc. as a plain object.
 - [Basic Usage](#basic-usage)
 - [Compound Document Usage](#compound-document-usage)
 
-<a name="basic-usage" />
 #### Example 1: Basic Usage
+
 ```javascript
 // user-serializer.js
 import Serializer from 'jaysonapi';
-
 
 export default const UserSerializer = Serializer('user', {
   attributes: ['name', 'email'],
@@ -50,7 +49,6 @@ export default const UserSerializer = Serializer('user', {
 ```javascript
 // user-handler.js
 import UserSerializer from './user-serializer';
-
 
 // Assuming your using some MVC style library/framework and you're within a
 // handler function.
